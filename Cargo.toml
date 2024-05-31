@@ -21,4 +21,4 @@ edition = "2018"
 maintenance = { status = "actively-developed" }
 
 [dependencies]
-ash = "0.37.0"
+ash = "0.38.0"
