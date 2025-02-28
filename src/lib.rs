@@ -92,6 +92,9 @@ pub enum AccessType {
     /// Read by depth/stencil tests or subpass load operations
     DepthStencilAttachmentRead,
 
+    /// Read or written as a depth/stencil attachment during rendering, or via a subpass store op
+    DepthStencilAttachmentReadWrite,
+
     /// Read as a uniform buffer in a compute shader
     ComputeShaderReadUniformBuffer,
 
@@ -100,6 +103,9 @@ pub enum AccessType {
 
     /// Read as any other resource in a compute shader
     ComputeShaderReadOther,
+
+    /// Read or written as any resource in a compute shader
+    ComputeShaderReadWrite,
 
     /// Read as a uniform buffer in any shader
     AnyShaderReadUniformBuffer,
@@ -635,6 +641,13 @@ pub(crate) fn get_access_info(access_type: AccessType) -> AccessInfo {
             access_mask: vk::AccessFlags::DEPTH_STENCIL_ATTACHMENT_READ,
             image_layout: vk::ImageLayout::DEPTH_STENCIL_READ_ONLY_OPTIMAL,
         },
+        AccessType::DepthStencilAttachmentReadWrite => AccessInfo {
+            stage_mask: vk::PipelineStageFlags::EARLY_FRAGMENT_TESTS
+                | vk::PipelineStageFlags::LATE_FRAGMENT_TESTS,
+            access_mask: vk::AccessFlags::DEPTH_STENCIL_ATTACHMENT_READ
+                | vk::AccessFlags::DEPTH_STENCIL_ATTACHMENT_WRITE,
+            image_layout: vk::ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+        },
         AccessType::ComputeShaderReadUniformBuffer => AccessInfo {
             stage_mask: vk::PipelineStageFlags::COMPUTE_SHADER,
             access_mask: vk::AccessFlags::UNIFORM_READ,
@@ -745,6 +758,11 @@ pub(crate) fn get_access_info(access_type: AccessType) -> AccessInfo {
             access_mask: vk::AccessFlags::SHADER_WRITE,
             image_layout: vk::ImageLayout::GENERAL,
         },
+        AccessType::ComputeShaderReadWrite => AccessInfo {
+            stage_mask: vk::PipelineStageFlags::COMPUTE_SHADER,
+            access_mask: vk::AccessFlags::SHADER_READ | vk::AccessFlags::SHADER_WRITE,
+            image_layout: vk::ImageLayout::GENERAL,
+        },
         AccessType::AnyShaderWrite => AccessInfo {
             stage_mask: vk::PipelineStageFlags::ALL_COMMANDS,
             access_mask: vk::AccessFlags::SHADER_WRITE,
@@ -816,22 +834,65 @@ pub(crate) fn get_access_info(access_type: AccessType) -> AccessInfo {
 
 pub(crate) fn is_write_access(access_type: AccessType) -> bool {
     match access_type {
-        AccessType::CommandBufferWriteNVX => true,
-        AccessType::VertexShaderWrite => true,
-        AccessType::TessellationControlShaderWrite => true,
-        AccessType::TessellationEvaluationShaderWrite => true,
-        AccessType::GeometryShaderWrite => true,
-        AccessType::FragmentShaderWrite => true,
-        AccessType::ColorAttachmentWrite => true,
-        AccessType::DepthStencilAttachmentWrite => true,
-        AccessType::DepthAttachmentWriteStencilReadOnly => true,
-        AccessType::StencilAttachmentWriteDepthReadOnly => true,
-        AccessType::ComputeShaderWrite => true,
-        AccessType::AnyShaderWrite => true,
-        AccessType::TransferWrite => true,
-        AccessType::HostWrite => true,
-        AccessType::ColorAttachmentReadWrite => true,
-        AccessType::General => true,
-        _ => false,
+        AccessType::CommandBufferWriteNVX
+        | AccessType::VertexShaderWrite
+        | AccessType::TessellationControlShaderWrite
+        | AccessType::TessellationEvaluationShaderWrite
+        | AccessType::GeometryShaderWrite
+        | AccessType::FragmentShaderWrite
+        | AccessType::ColorAttachmentWrite
+        | AccessType::DepthStencilAttachmentReadWrite
+        | AccessType::DepthStencilAttachmentWrite
+        | AccessType::DepthAttachmentWriteStencilReadOnly
+        | AccessType::StencilAttachmentWriteDepthReadOnly
+        | AccessType::ComputeShaderReadWrite
+        | AccessType::ComputeShaderWrite
+        | AccessType::AnyShaderWrite
+        | AccessType::TransferWrite
+        | AccessType::HostWrite
+        | AccessType::ColorAttachmentReadWrite
+        | AccessType::General
+        | AccessType::AccelerationStructureBufferWrite
+        | AccessType::AccelerationStructureBuildWrite => true,
+        AccessType::Nothing
+        | AccessType::CommandBufferReadNVX
+        | AccessType::IndirectBuffer
+        | AccessType::IndexBuffer
+        | AccessType::VertexBuffer
+        | AccessType::VertexShaderReadUniformBuffer
+        | AccessType::VertexShaderReadSampledImageOrUniformTexelBuffer
+        | AccessType::VertexShaderReadOther
+        | AccessType::TessellationControlShaderReadUniformBuffer
+        | AccessType::TessellationControlShaderReadSampledImageOrUniformTexelBuffer
+        | AccessType::TessellationControlShaderReadOther
+        | AccessType::TessellationEvaluationShaderReadUniformBuffer
+        | AccessType::TessellationEvaluationShaderReadSampledImageOrUniformTexelBuffer
+        | AccessType::TessellationEvaluationShaderReadOther
+        | AccessType::GeometryShaderReadUniformBuffer
+        | AccessType::GeometryShaderReadSampledImageOrUniformTexelBuffer
+        | AccessType::GeometryShaderReadOther
+        | AccessType::FragmentShaderReadUniformBuffer
+        | AccessType::FragmentShaderReadSampledImageOrUniformTexelBuffer
+        | AccessType::FragmentShaderReadColorInputAttachment
+        | AccessType::FragmentShaderReadDepthStencilInputAttachment
+        | AccessType::FragmentShaderReadOther
+        | AccessType::ColorAttachmentRead
+        | AccessType::DepthStencilAttachmentRead
+        | AccessType::ComputeShaderReadUniformBuffer
+        | AccessType::ComputeShaderReadSampledImageOrUniformTexelBuffer
+        | AccessType::ComputeShaderReadOther
+        | AccessType::AnyShaderReadUniformBuffer
+        | AccessType::AnyShaderReadUniformBufferOrVertexBuffer
+        | AccessType::AnyShaderReadSampledImageOrUniformTexelBuffer
+        | AccessType::AnyShaderReadOther
+        | AccessType::TransferRead
+        | AccessType::HostRead
+        | AccessType::Present
+        | AccessType::RayTracingShaderReadSampledImageOrUniformTexelBuffer
+        | AccessType::RayTracingShaderReadColorInputAttachment
+        | AccessType::RayTracingShaderReadDepthStencilInputAttachment
+        | AccessType::RayTracingShaderReadAccelerationStructure
+        | AccessType::RayTracingShaderReadOther
+        | AccessType::AccelerationStructureBuildRead => false,
     }
 }
