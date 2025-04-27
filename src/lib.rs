@@ -93,6 +93,9 @@ pub enum AccessType {
     /// Read by depth/stencil tests or subpass load operations
     DepthStencilAttachmentRead,
 
+    /// Read or written as a depth/stencil attachment during rendering, or via a subpass store op
+    DepthStencilAttachmentReadWrite,
+
     /// Read as a uniform buffer in a compute shader
     ComputeShaderReadUniformBuffer,
 
@@ -101,6 +104,9 @@ pub enum AccessType {
 
     /// Read as any other resource in a compute shader
     ComputeShaderReadOther,
+
+    /// Read or written as any resource in a compute shader
+    ComputeShaderReadWrite,
 
     /// Read as a uniform buffer in any shader
     AnyShaderReadUniformBuffer,
@@ -625,6 +631,13 @@ pub(crate) fn get_access_info(access_type: AccessType) -> AccessInfo {
             access_mask: vk::AccessFlags::DEPTH_STENCIL_ATTACHMENT_READ,
             image_layout: vk::ImageLayout::DEPTH_STENCIL_READ_ONLY_OPTIMAL,
         },
+        AccessType::DepthStencilAttachmentReadWrite => AccessInfo {
+            stage_mask: vk::PipelineStageFlags::EARLY_FRAGMENT_TESTS
+                | vk::PipelineStageFlags::LATE_FRAGMENT_TESTS,
+            access_mask: vk::AccessFlags::DEPTH_STENCIL_ATTACHMENT_READ
+                | vk::AccessFlags::DEPTH_STENCIL_ATTACHMENT_WRITE,
+            image_layout: vk::ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+        },
         AccessType::ComputeShaderReadUniformBuffer => AccessInfo {
             stage_mask: vk::PipelineStageFlags::COMPUTE_SHADER,
             access_mask: vk::AccessFlags::UNIFORM_READ,
@@ -735,6 +748,11 @@ pub(crate) fn get_access_info(access_type: AccessType) -> AccessInfo {
             access_mask: vk::AccessFlags::SHADER_WRITE,
             image_layout: vk::ImageLayout::GENERAL,
         },
+        AccessType::ComputeShaderReadWrite => AccessInfo {
+            stage_mask: vk::PipelineStageFlags::COMPUTE_SHADER,
+            access_mask: vk::AccessFlags::SHADER_READ | vk::AccessFlags::SHADER_WRITE,
+            image_layout: vk::ImageLayout::GENERAL,
+        },
         AccessType::AnyShaderWrite => AccessInfo {
             stage_mask: vk::PipelineStageFlags::ALL_COMMANDS,
             access_mask: vk::AccessFlags::SHADER_WRITE,
@@ -816,8 +834,10 @@ pub(crate) fn is_write_access(access_type: AccessType) -> bool {
             | AccessType::ColorAttachmentWrite
             | AccessType::DepthStencilAttachmentWrite
             | AccessType::DepthAttachmentWriteStencilReadOnly
+            | AccessType::DepthStencilAttachmentReadWrite
             | AccessType::StencilAttachmentWriteDepthReadOnly
             | AccessType::ComputeShaderWrite
+            | AccessType::ComputeShaderReadWrite
             | AccessType::AnyShaderWrite
             | AccessType::TransferWrite
             | AccessType::HostWrite
