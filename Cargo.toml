@@ -1,6 +1,6 @@
 [package]
 name = "vk-sync-fork"
-version = "0.5.1"
+version = "0.5.2"
 license = "MIT/Apache-2.0"
 authors = ["Ashley Ruglys <ashley.ruglys@gmail.com>"]
 homepage = "https://github.com/expenses/vk-sync-rs"
