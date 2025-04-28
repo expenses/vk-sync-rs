@@ -45,6 +45,24 @@ pub enum AccessType {
     /// Read as any other resource in a vertex shader
     VertexShaderReadOther,
 
+    /// Read as a uniform buffer in a mesh shader
+    MeshShaderReadUniformBuffer,
+
+    /// Read as a sampled image/uniform texel buffer in a mesh shader
+    MeshShaderReadSampledImageOrUniformTexelBuffer,
+
+    /// Read as any other resource in a mesh shader
+    MeshShaderReadOther,
+
+    /// Read as a uniform buffer in a task shader
+    TaskShaderReadUniformBuffer,
+
+    /// Read as a sampled image/uniform texel buffer in a task shader
+    TaskShaderReadSampledImageOrUniformTexelBuffer,
+
+    /// Read as any other resource in a task shader
+    TaskShaderReadOther,
+
     /// Read as a uniform buffer in a tessellation control shader
     TessellationControlShaderReadUniformBuffer,
 
@@ -134,6 +152,12 @@ pub enum AccessType {
 
     /// Written as any resource in a vertex shader
     VertexShaderWrite,
+
+    /// Written as any resource in a mesh shader
+    MeshShaderWrite,
+
+    /// Written as any resource in a task shader
+    TaskShaderWrite,
 
     /// Written as any resource in a tessellation control shader
     TessellationControlShaderWrite,
@@ -548,6 +572,36 @@ pub(crate) fn get_access_info(access_type: AccessType) -> AccessInfo {
             access_mask: vk::AccessFlags::SHADER_READ,
             image_layout: vk::ImageLayout::GENERAL,
         },
+        AccessType::MeshShaderReadUniformBuffer => AccessInfo {
+            stage_mask: vk::PipelineStageFlags::MESH_SHADER_EXT,
+            access_mask: vk::AccessFlags::SHADER_READ,
+            image_layout: vk::ImageLayout::UNDEFINED,
+        },
+        AccessType::MeshShaderReadSampledImageOrUniformTexelBuffer => AccessInfo {
+            stage_mask: vk::PipelineStageFlags::MESH_SHADER_EXT,
+            access_mask: vk::AccessFlags::SHADER_READ,
+            image_layout: vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL,
+        },
+        AccessType::MeshShaderReadOther => AccessInfo {
+            stage_mask: vk::PipelineStageFlags::MESH_SHADER_EXT,
+            access_mask: vk::AccessFlags::SHADER_READ,
+            image_layout: vk::ImageLayout::GENERAL,
+        },
+        AccessType::TaskShaderReadUniformBuffer => AccessInfo {
+            stage_mask: vk::PipelineStageFlags::TASK_SHADER_EXT,
+            access_mask: vk::AccessFlags::SHADER_READ,
+            image_layout: vk::ImageLayout::UNDEFINED,
+        },
+        AccessType::TaskShaderReadSampledImageOrUniformTexelBuffer => AccessInfo {
+            stage_mask: vk::PipelineStageFlags::TASK_SHADER_EXT,
+            access_mask: vk::AccessFlags::SHADER_READ,
+            image_layout: vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL,
+        },
+        AccessType::TaskShaderReadOther => AccessInfo {
+            stage_mask: vk::PipelineStageFlags::TASK_SHADER_EXT,
+            access_mask: vk::AccessFlags::SHADER_READ,
+            image_layout: vk::ImageLayout::GENERAL,
+        },
         AccessType::TessellationControlShaderReadUniformBuffer => AccessInfo {
             stage_mask: vk::PipelineStageFlags::TESSELLATION_CONTROL_SHADER,
             access_mask: vk::AccessFlags::UNIFORM_READ,
@@ -698,6 +752,16 @@ pub(crate) fn get_access_info(access_type: AccessType) -> AccessInfo {
             access_mask: vk::AccessFlags::SHADER_WRITE,
             image_layout: vk::ImageLayout::GENERAL,
         },
+        AccessType::MeshShaderWrite => AccessInfo {
+            stage_mask: vk::PipelineStageFlags::MESH_SHADER_EXT,
+            access_mask: vk::AccessFlags::SHADER_WRITE,
+            image_layout: vk::ImageLayout::GENERAL,
+        },
+        AccessType::TaskShaderWrite => AccessInfo {
+            stage_mask: vk::PipelineStageFlags::TASK_SHADER_EXT,
+            access_mask: vk::AccessFlags::SHADER_WRITE,
+            image_layout: vk::ImageLayout::GENERAL,
+        },
         AccessType::TessellationControlShaderWrite => AccessInfo {
             stage_mask: vk::PipelineStageFlags::TESSELLATION_CONTROL_SHADER,
             access_mask: vk::AccessFlags::SHADER_WRITE,
@@ -827,6 +891,8 @@ pub(crate) fn is_write_access(access_type: AccessType) -> bool {
         access_type,
         AccessType::CommandBufferWriteNVX
             | AccessType::VertexShaderWrite
+            | AccessType::MeshShaderWrite
+            | AccessType::TaskShaderWrite
             | AccessType::TessellationControlShaderWrite
             | AccessType::TessellationEvaluationShaderWrite
             | AccessType::GeometryShaderWrite
